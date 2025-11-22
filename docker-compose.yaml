@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  rabbitmq-puller:
+    # Build the image from the specified Dockerfile path
+    networks:
+      - redis-log-puller-network
+    image: ghcr.io/rakaiseto/redis-log-puller:latest
+    container_name: redis-puller
+    restart: always # Critical: Docker will always try to restart the container
+    # environment:
+      # Application-specific environment variables
+      # - DB_NAME=log_puller_db
+    secrets:
+      - db
+networks:
+  redis-log-puller-network:
+  # Top-level Secrets Section
+secrets:
+  db:
+    file: /opt/secrets/db_credentials.txt
