@@ -25,7 +25,10 @@ func NewRedisClient() (*redis.Client, error) {
 }
 
 func NewDBConnection(dbName string) (*sql.DB, error) {
-	conn, err := sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", GetSecretFromKey("db", "DB_USER"), GetSecretFromKey("db", "DB_PASSWORD"), GetSecretFromKey("db", "DB_HOST"), GetSecretFromKey("db", "DB_PORT"), dbName))
+	sqlConn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", GetSecretFromKey("db", "DB_USER"), GetSecretFromKey("db", "DB_PASSWORD"), GetSecretFromKey("db", "DB_HOST"), GetSecretFromKey("db", "DB_PORT"), dbName)
+	fmt.Println(sqlConn)
+	conn, err := sql.Open("postgres", sqlConn)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to db: %w", err)
 	}
