@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -28,7 +29,19 @@ func GetSecretFromKey(fileName string, key string) string {
 	}
 
 	if val, ok := secrets[key]; ok {
-		return val
+		cleaned := strings.TrimSpace(val)
+
+		// Windows CRLF fix
+		cleaned = strings.TrimSuffix(cleaned, "\r")
+
+		// Port check
+		if strings.Contains(key, "PORT") {
+			if _, err := strconv.Atoi(cleaned); err != nil {
+				fmt.Printf("Invalid port in secret for %s: %q\n", key, cleaned)
+			}
+		}
+
+		return cleaned
 	}
 
 	fmt.Printf("Secret %q not found in %q. Using environment variable fallback.\n", key, fileName)
