@@ -3,8 +3,9 @@ package duitrapi
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"encoding/json"
+	"fmt"
+
 	utils "github.com/rakaiseto/redis-log-puller/utils"
 )
 
@@ -12,23 +13,23 @@ type DuitRapiConsumer struct {
 	db *sql.DB
 }
 
-func NewDuitRapiConsumer(DBName string) *DuitRapiConsumer {
+func NewDuitRapiConsumer(DBName string) (*DuitRapiConsumer, error) {
 
 	db, err := utils.NewDBConnection(DBName)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	return &DuitRapiConsumer{
 		db: db,
-	}
+	}, nil
 }
 
 func (c *DuitRapiConsumer) Consume(ctx context.Context, data string) error {
 	// unmarshal json
-	var ocrMarketplaceData map[string]interface{}
+	var ocrMarketplaceData map[string]any
 	if err := json.Unmarshal([]byte(data), &ocrMarketplaceData); err != nil {
 		return err
-	}	
+	}
 
 	// insert into db
 	_, err := c.db.ExecContext(

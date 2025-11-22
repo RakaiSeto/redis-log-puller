@@ -8,9 +8,9 @@ import (
 	"syscall"
 	"time"
 
-	utils "github.com/rakaiseto/redis-log-puller/utils"
-	ocr_marketplace "github.com/rakaiseto/redis-log-puller/consumer/OCR_Marketplace"
 	duitrapi "github.com/rakaiseto/redis-log-puller/consumer/DuitRapi"
+	ocr_marketplace "github.com/rakaiseto/redis-log-puller/consumer/OCR_Marketplace"
+	utils "github.com/rakaiseto/redis-log-puller/utils"
 )
 
 func main() {
@@ -24,9 +24,21 @@ func main() {
 	defer rdb.Close()
 
 	// 2. Initialize Router and Consumers
+	ocrConsumer, err := ocr_marketplace.NewOCRMarketplaceConsumer("ocr_marketplace")
+	if err != nil {
+		fmt.Printf("Error initializing OCR Marketplace consumer: %v\n", err)
+		return
+	}
+
+	duitRapiConsumer, err := duitrapi.NewDuitRapiConsumer("duitrapi")
+	if err != nil {
+		fmt.Printf("Error initializing DuitRapi consumer: %v\n", err)
+		return
+	}
+
 	routing := map[string]utils.Consumer{
-		"queue:ocr_marketplace": ocr_marketplace.NewOCRMarketplaceConsumer("ocr_marketplace"),
-		"queue:duitrapi": duitrapi.NewDuitRapiConsumer("duitrapi"),
+		"queue:ocr_marketplace": ocrConsumer,
+		"queue:duitrapi":        duitRapiConsumer,
 	}
 
 	router := utils.NewRouter()

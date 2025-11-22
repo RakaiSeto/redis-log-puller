@@ -13,15 +13,15 @@ type OCRMarketplaceConsumer struct {
 	db *sql.DB
 }
 
-func NewOCRMarketplaceConsumer(DBName string) *OCRMarketplaceConsumer {
+func NewOCRMarketplaceConsumer(DBName string) (*OCRMarketplaceConsumer, error) {
 
 	db, err := utils.NewDBConnection(DBName)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	return &OCRMarketplaceConsumer{
 		db: db,
-	}
+	}, nil
 }
 
 func (c *OCRMarketplaceConsumer) Consume(ctx context.Context, data string) error {
@@ -29,7 +29,7 @@ func (c *OCRMarketplaceConsumer) Consume(ctx context.Context, data string) error
 	var ocrMarketplaceData map[string]interface{}
 	if err := json.Unmarshal([]byte(data), &ocrMarketplaceData); err != nil {
 		return err
-	}	
+	}
 
 	// insert into db
 	_, err := c.db.ExecContext(
