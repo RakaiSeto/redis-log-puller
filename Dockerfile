@@ -16,7 +16,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o redis-log-puller .
 
 # Stage 2: Run
-FROM slim:latest
+FROM alpine:latest
 
 WORKDIR /app
 
