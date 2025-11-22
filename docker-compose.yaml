@@ -6,12 +6,12 @@ services:
     container_name: redis-puller
     restart: always
     networks:
-      - redis-log-network
+      - redis_redis-log-network
     secrets:
       - db
 
 networks:
-  redis-log-network:
+  redis_redis-log-network:
     external: true
 
 secrets:
