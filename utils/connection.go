@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
@@ -25,7 +26,8 @@ func NewRedisClient() (*redis.Client, error) {
 }
 
 func NewDBConnection(dbName string) (*sql.DB, error) {
-	sqlConn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", GetSecretFromKey("db", "DB_USER"), GetSecretFromKey("db", "DB_PASSWORD"), GetSecretFromKey("db", "DB_HOST"), GetSecretFromKey("db", "DB_PORT"), dbName)
+	pass := url.QueryEscape(GetSecretFromKey("db", "DB_PASSWORD"))
+	sqlConn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", GetSecretFromKey("db", "DB_USER"), pass, GetSecretFromKey("db", "DB_HOST"), GetSecretFromKey("db", "DB_PORT"), dbName)
 	fmt.Println(sqlConn)
 	conn, err := sql.Open("postgres", sqlConn)
 
