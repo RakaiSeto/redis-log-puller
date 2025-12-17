@@ -42,8 +42,12 @@ func NewDBConnection(dbName string) (*sql.DB, error) {
 }
 
 func NewDBConnectionWithCategory(category models.ConnectionCategory, dbName string) (*sql.DB, error) {
-	connectionUrl := url.QueryEscape(GetSecretFromKey("db", string(category)))
-	connectionUrl = connectionUrl + "/" + dbName + "?sslmode=disable"
+	host := GetSecretFromKey("db", "DB_HOST")
+	port := GetSecretFromKey("db", "DB_PORT")
+	user := GetSecretFromKey("db", "DB_USER_" + string(category))
+	pass := url.QueryEscape(GetSecretFromKey("db", "DB_PASSWORD_" + string(category)))
+
+	connectionUrl := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, pass, host, port, dbName)
 	fmt.Println(connectionUrl)
 	conn, err := sql.Open("postgres", connectionUrl)
 
