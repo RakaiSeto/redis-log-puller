@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
+	"encoding/json"
 
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
@@ -58,4 +59,42 @@ func NewDBConnectionWithCategory(category models.ConnectionCategory, dbName stri
 		return nil, fmt.Errorf("failed to connect to db: %w", err)
 	}
 	return conn, nil
+}
+
+func ConsumeActivityLog(
+	ctx context.Context,
+	db *sql.DB,
+	data string,
+	logPrefix string,
+) error {
+
+	var payload models.ActivityLog
+	if err := json.Unmarshal([]byte(data), &payload); err != nil {
+		return err
+	}
+
+	_, err := db.ExecContext(
+		ctx,
+		`INSERT INTO activity_log
+		(activity_log_id, user_id, category, activity_name,
+		 entity_type, entity_id,
+		 is_success, timestamp, description, metadata)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+		payload.ActivityLogID,
+		payload.UserID,
+		payload.Category,
+		payload.ActivityName,
+		payload.EntityType,
+		payload.EntityID,
+		payload.IsSuccess,
+		payload.Timestamp,
+		payload.Description,
+		payload.Metadata,
+	)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("[%s] Processing: %s\n", logPrefix, payload.ActivityLogID)
+	return nil
 }
