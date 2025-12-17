@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
+	"github.com/rakaiseto/redis-log-puller/models"
 )
 
 func NewRedisClient() (*redis.Client, error) {
@@ -30,6 +31,21 @@ func NewDBConnection(dbName string) (*sql.DB, error) {
 	sqlConn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", GetSecretFromKey("db", "DB_USER"), pass, GetSecretFromKey("db", "DB_HOST"), GetSecretFromKey("db", "DB_PORT"), dbName)
 	fmt.Println(sqlConn)
 	conn, err := sql.Open("postgres", sqlConn)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to db: %w", err)
+	}
+	if err := conn.Ping(); err != nil {
+		return nil, fmt.Errorf("failed to connect to db: %w", err)
+	}
+	return conn, nil
+}
+
+func NewDBConnectionWithCategory(category models.ConnectionCategory, dbName string) (*sql.DB, error) {
+	connectionUrl := url.QueryEscape(GetSecretFromKey("db", string(category)))
+	connectionUrl = connectionUrl + "/" + dbName + "?sslmode=disable"
+	fmt.Println(connectionUrl)
+	conn, err := sql.Open("postgres", connectionUrl)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to db: %w", err)

@@ -8,7 +8,10 @@ import (
 	"syscall"
 	"time"
 
-	duitrapi "github.com/rakaiseto/redis-log-puller/consumer/DuitRapi"
+	duitrapi_dev "github.com/rakaiseto/redis-log-puller/consumer/DuitRapi/Dev"
+	duitrapi_prod "github.com/rakaiseto/redis-log-puller/consumer/DuitRapi/Prod"
+	duitrapi_staging "github.com/rakaiseto/redis-log-puller/consumer/DuitRapi/Staging"
+
 	ocr_marketplace "github.com/rakaiseto/redis-log-puller/consumer/OCR_Marketplace"
 	utils "github.com/rakaiseto/redis-log-puller/utils"
 )
@@ -24,21 +27,10 @@ func main() {
 	defer rdb.Close()
 
 	// 2. Initialize Router and Consumers
-	ocrConsumer, err := ocr_marketplace.NewOCRMarketplaceConsumer("ocr_marketplace")
-	if err != nil {
-		fmt.Printf("Error initializing OCR Marketplace consumer: %v\n", err)
+	routing := initializeConsumers()
+	if routing == nil {
+		fmt.Println("Failed registering consumers. Exiting.")
 		return
-	}
-
-	duitRapiConsumer, err := duitrapi.NewDuitRapiConsumer("duitrapi")
-	if err != nil {
-		fmt.Printf("Error initializing DuitRapi consumer: %v\n", err)
-		return
-	}
-
-	routing := map[string]utils.Consumer{
-		"queue:ocr_marketplace": ocrConsumer,
-		"queue:duitrapi":        duitRapiConsumer,
 	}
 
 	router := utils.NewRouter()
@@ -96,4 +88,38 @@ func main() {
 			}
 		}
 	}
+}
+
+func initializeConsumers() map[string]utils.Consumer {
+	ocrConsumer, err := ocr_marketplace.NewOCRMarketplaceConsumer("ocr_marketplace")
+	if err != nil {
+		fmt.Printf("Error initializing OCR Marketplace consumer: %v\n", err)
+		return nil
+	}
+
+	duitRapiDevConsumer, err := duitrapi_dev.NewDuitRapiDevConsumer("duitrapi_dev")
+	if err != nil {
+		fmt.Printf("Error initializing DuitRapi dev consumer: %v\n", err)
+		return nil
+	}
+
+	duitRapiStagingConsumer, err := duitrapi_staging.NewDuitRapiStagingConsumer("duitrapi_staging")
+	if err != nil {
+		fmt.Printf("Error initializing DuitRapi staging consumer: %v\n", err)
+		return nil
+	}
+
+	duitRapiConsumer, err := duitrapi_prod.NewDuitRapiConsumer("duitrapi_prod")
+	if err != nil {
+		fmt.Printf("Error initializing DuitRapi consumer: %v\n", err)
+		return nil
+	}
+
+	routing := map[string]utils.Consumer{
+		"queue:ocr_marketplace":  ocrConsumer,
+		"queue:duitrapi":         duitRapiConsumer,
+		"queue:duitrapi_staging": duitRapiStagingConsumer,
+		"queue:duitrapi_dev":     duitRapiDevConsumer,
+	}
+	return routing
 }
